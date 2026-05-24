@@ -14,7 +14,8 @@ window.FreedomChart = (() => {
       backgroundColor: "rgba(22, 163, 74, 0.12)",
       tension: 0.35,
       borderWidth: 3,
-      pointRadius: 0,
+      pointRadius: 2,
+      pointHoverRadius: 5,
       fill: {
         target: 1,
         above: "rgba(56, 189, 248, 0.22)",
@@ -28,12 +29,13 @@ window.FreedomChart = (() => {
       backgroundColor: "rgba(239, 68, 68, 0.12)",
       tension: 0.35,
       borderWidth: 3,
-      pointRadius: 0,
+      pointRadius: 2,
+      pointHoverRadius: 5,
       fill: false,
     },
   ];
 
-  const buildConfig = (labels, income, expenses) => ({
+  const buildConfig = ({ labels, income, expenses, freedomGap, savingsRates, currency }) => ({
     type: "line",
     data: {
       labels,
@@ -48,16 +50,20 @@ window.FreedomChart = (() => {
       },
       plugins: {
         legend: {
-          position: "top",
-          labels: {
-            usePointStyle: true,
-          },
+          display: false,
         },
         tooltip: {
           callbacks: {
+            afterBody: (items) => {
+              const index = items[0]?.dataIndex ?? 0;
+              return [
+                `Freedom Gap: ${window.FreedomUI.formatCurrency(freedomGap[index], currency)}`,
+                `Savings Rate: ${window.FreedomUI.formatPercent(savingsRates[index])}`,
+              ];
+            },
             label: (context) => {
               const value = context.parsed.y ?? 0;
-              return `${context.dataset.label}: ${window.FreedomUI.formatCurrency(value)}`;
+              return `${context.dataset.label}: ${window.FreedomUI.formatCurrency(value, currency)}`;
             },
           },
         },
@@ -75,35 +81,43 @@ window.FreedomChart = (() => {
         y: {
           title: {
             display: true,
-            text: "Amount (USD)",
+            text: `Amount (${currency})`,
           },
           ticks: {
-            callback: (value) => window.FreedomUI.formatCurrency(value),
+            callback: (value) => window.FreedomUI.formatCurrency(value, currency),
           },
         },
       },
     },
   });
 
-  const renderChart = (ctx, labels, income, expenses) => {
-    if (chartInstance) {
-      chartInstance.destroy();
+  const renderOrUpdateChart = (ctx, data) => {
+    if (!chartInstance) {
+      chartInstance = new Chart(ctx, buildConfig(data));
+      return;
     }
 
-    chartInstance = new Chart(ctx, buildConfig(labels, income, expenses));
-  };
-
-  const updateChart = (labels, income, expenses) => {
-    if (!chartInstance) return;
-
-    chartInstance.data.labels = labels;
-    chartInstance.data.datasets[0].data = income;
-    chartInstance.data.datasets[1].data = expenses;
+    chartInstance.data.labels = data.labels;
+    chartInstance.data.datasets = buildDatasets(data.income, data.expenses);
+    chartInstance.options.scales.y.title.text = `Amount (${data.currency})`;
+    chartInstance.options.plugins.tooltip.callbacks.afterBody = (items) => {
+      const index = items[0]?.dataIndex ?? 0;
+      return [
+        `Freedom Gap: ${window.FreedomUI.formatCurrency(data.freedomGap[index], data.currency)}`,
+        `Savings Rate: ${window.FreedomUI.formatPercent(data.savingsRates[index])}`,
+      ];
+    };
+    chartInstance.options.plugins.tooltip.callbacks.label = (context) => {
+      const value = context.parsed.y ?? 0;
+      return `${context.dataset.label}: ${window.FreedomUI.formatCurrency(value, data.currency)}`;
+    };
     chartInstance.update();
   };
 
+  const getChartInstance = () => chartInstance;
+
   return {
-    renderChart,
-    updateChart,
+    renderOrUpdateChart,
+    getChartInstance,
   };
 })();
