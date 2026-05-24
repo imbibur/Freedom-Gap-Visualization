@@ -3,110 +3,166 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Visualize the gap between income and expenses over time, compare scenarios, and estimate cumulative surplus toward financial freedom."
+    />
+    <meta property="og:title" content="Freedom Gap Visualization" />
+    <meta
+      property="og:description"
+      content="See how income growth and controlled expenses create a wider freedom gap over time."
+    />
+    <meta property="og:type" content="website" />
     <title>Freedom Gap Visualization</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="page">
       <header class="hero">
+        <p class="eyebrow">Static financial planning tool</p>
         <h1>Freedom Gap Visualization</h1>
         <p>
           Explore how the gap between your income and expenses grows over time. The shaded
-          Freedom Zone shows the surplus you can invest toward financial freedom.
+          Freedom Zone shows the surplus you can save, invest, or use to build more optionality.
         </p>
       </header>
 
-      <main class="layout">
-        <section class="panel" aria-label="Projection inputs">
-          <h2>Projection Inputs</h2>
-          <form id="controls" class="form-grid">
-            <div class="field">
-              <label for="startingIncome">Starting income (annual)</label>
-              <input
-                id="startingIncome"
-                name="startingIncome"
-                type="number"
-                min="0"
-                step="100"
-                value="60000"
-                required
-              />
-              <span class="helper-text">Current yearly income in USD.</span>
-            </div>
-            <div class="field">
-              <label for="startingExpense">Starting expenses (annual)</label>
-              <input
-                id="startingExpense"
-                name="startingExpense"
-                type="number"
-                min="0"
-                step="100"
-                value="42000"
-                required
-              />
-              <span class="helper-text">Current yearly expenses in USD.</span>
-            </div>
-            <div class="field">
-              <label for="incomeGrowthRate">Income growth rate (%)</label>
-              <input
-                id="incomeGrowthRate"
-                name="incomeGrowthRate"
-                type="number"
-                min="0"
-                step="0.1"
-                value="4.5"
-                required
-              />
-              <span class="helper-text">Annual percentage growth of income.</span>
-            </div>
-            <div class="field">
-              <label for="expenseGrowthRate">Expense growth rate (%)</label>
-              <input
-                id="expenseGrowthRate"
-                name="expenseGrowthRate"
-                type="number"
-                min="0"
-                step="0.1"
-                value="2.5"
-                required
-              />
-              <span class="helper-text">Annual percentage growth of expenses.</span>
-            </div>
-            <div class="field">
-              <label for="years">Number of years</label>
-              <input
-                id="years"
-                name="years"
-                type="number"
-                min="1"
-                step="1"
-                value="15"
-                required
-              />
-              <span class="helper-text">Projection horizon.</span>
-            </div>
-            <p id="formError" class="error" role="alert"></p>
-          </form>
+      <main>
+        <section class="summary-grid" aria-label="Projection summary" aria-live="polite">
+          <article class="summary-card">
+            <span>Current income</span>
+            <strong id="summaryIncome">—</strong>
+          </article>
+          <article class="summary-card">
+            <span>Current expenses</span>
+            <strong id="summaryExpenses">—</strong>
+          </article>
+          <article class="summary-card highlight">
+            <span>Freedom gap</span>
+            <strong id="summaryGap">—</strong>
+          </article>
+          <article class="summary-card">
+            <span>Savings rate</span>
+            <strong id="summarySavingsRate">—</strong>
+          </article>
+          <article class="summary-card wide">
+            <span>Cumulative freedom</span>
+            <strong id="summaryCumulative">—</strong>
+          </article>
         </section>
 
-        <section class="panel chart-panel" aria-label="Freedom Gap chart">
-          <div class="chart-wrapper">
-            <canvas id="freedomChart"></canvas>
-          </div>
+        <div class="layout">
+          <section class="panel" aria-label="Projection inputs">
+            <div class="section-heading">
+              <h2>Projection Inputs</h2>
+              <p>Change the values and the chart updates instantly.</p>
+            </div>
 
-          <div class="legend" aria-label="Legend">
-            <span><span class="swatch income"></span>Income</span>
-            <span><span class="swatch expense"></span>Expenses</span>
-            <span><span class="swatch freedom"></span>Freedom Zone (surplus)</span>
-          </div>
+            <form id="controls" class="form-grid">
+              <div class="field-group two-columns">
+                <div class="field">
+                  <label for="currency">Currency</label>
+                  <select id="currency" name="currency">
+                    <option value="IDR">IDR</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
 
-          <div class="freedom-total" id="totalFreedom"></div>
-        </section>
+                <div class="field">
+                  <label for="period">Input period</label>
+                  <select id="period" name="period">
+                    <option value="monthly">Monthly</option>
+                    <option value="annual">Annual</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="startingIncome">Starting income</label>
+                <input id="startingIncome" name="startingIncome" type="number" min="0" step="1000" value="10000000" required />
+                <span class="helper-text" id="incomeHelp">Current monthly income.</span>
+              </div>
+
+              <div class="field">
+                <label for="startingExpense">Starting expenses</label>
+                <input id="startingExpense" name="startingExpense" type="number" min="0" step="1000" value="6000000" required />
+                <span class="helper-text" id="expenseHelp">Current monthly expenses.</span>
+              </div>
+
+              <div class="field">
+                <label for="scenario">Scenario preset</label>
+                <select id="scenario" name="scenario">
+                  <option value="custom">Custom</option>
+                  <option value="conservative">Conservative</option>
+                  <option value="realistic">Realistic</option>
+                  <option value="aggressive">Aggressive</option>
+                </select>
+                <span class="helper-text">Presets only change the growth-rate inputs.</span>
+              </div>
+
+              <div class="field-group two-columns">
+                <div class="field">
+                  <label for="incomeGrowthRate">Income growth rate (%)</label>
+                  <input id="incomeGrowthRate" name="incomeGrowthRate" type="number" min="-100" step="0.1" value="8" required />
+                </div>
+
+                <div class="field">
+                  <label for="expenseGrowthRate">Expense growth rate (%)</label>
+                  <input id="expenseGrowthRate" name="expenseGrowthRate" type="number" min="-100" step="0.1" value="4" required />
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="years">Number of years</label>
+                <input id="years" name="years" type="number" min="1" max="60" step="1" value="10" required />
+                <span class="helper-text">Projection horizon. Maximum 60 years.</span>
+              </div>
+
+              <p id="formError" class="error" role="alert"></p>
+
+              <div class="button-grid" aria-label="Actions">
+                <button type="button" id="resetButton" class="secondary-button">Reset</button>
+                <button type="button" id="copyLinkButton">Copy share link</button>
+                <button type="button" id="exportCsvButton">Export CSV</button>
+                <button type="button" id="exportPngButton">Export PNG</button>
+              </div>
+              <p id="actionStatus" class="status" aria-live="polite"></p>
+            </form>
+          </section>
+
+          <section class="panel chart-panel" aria-label="Freedom Gap chart">
+            <div class="chart-header">
+              <div class="section-heading">
+                <h2>Income vs Expenses</h2>
+                <p id="chartSubtitle">Projected monthly values by year.</p>
+              </div>
+            </div>
+
+            <div class="chart-wrapper">
+              <canvas id="freedomChart" aria-label="Line chart showing income, expenses, and freedom gap over time"></canvas>
+            </div>
+
+            <div class="legend" aria-label="Legend">
+              <span><span class="swatch income"></span>Income line</span>
+              <span><span class="swatch expense"></span>Expenses line</span>
+              <span><span class="swatch freedom"></span>Shaded Freedom Zone</span>
+            </div>
+
+            <div class="formula-box">
+              <h3>How it works</h3>
+              <p><strong>Freedom Gap</strong> = Income − Expenses</p>
+              <p><strong>Savings Rate</strong> = Freedom Gap ÷ Income × 100</p>
+              <p><strong>Cumulative Freedom</strong> = total annualized surplus across the projection.</p>
+            </div>
+          </section>
+        </div>
       </main>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="ui.js"></script>
-    <script src="chart.js"></script>
-    <script src="main.js"></script>
+
+    <noscript>This app needs JavaScript enabled to calculate and draw the projection.</noscript>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+    <script defer src="ui.js"></script>
+    <script defer src="chart.js"></script>
+    <script defer src="main.js"></script>
   </body>
 </html>
