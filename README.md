@@ -12,7 +12,7 @@ This is a 100% static site. No build steps are required.
 That’s it!
 
 You can also look at it here:
-https://gboytyro.github.io/income-and-expense/
+https://imbibur.github.io/Freedom-Gap-Visualization/
 
 ## Why this visualization matters
 
